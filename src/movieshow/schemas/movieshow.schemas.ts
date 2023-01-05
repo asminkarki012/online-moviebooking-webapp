@@ -26,11 +26,16 @@ export class MovieShow {
   @Prop({ type:String})
   movieShowDate: string;
 
+  @Prop({type:String})
+  movieReleaseDate:string;
+
   @Prop({ type: SchemaTypes.ObjectId, ref: "Cinema" })
   cinemaId: string;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: "User" })
   userId: string;
+
+
 }
 
 export const MovieShowSchema = SchemaFactory.createForClass(MovieShow);

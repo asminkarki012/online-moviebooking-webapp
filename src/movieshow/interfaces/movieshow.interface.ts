@@ -1,5 +1,5 @@
 export class MovieShow{
-
+  id?:string;
   movieTitle: string;
 
   movieDescription: string;

@@ -14,6 +14,8 @@ import { UserDocument } from "src/auth/schemas/user.schema";
 import { InjectModel } from "@nestjs/mongoose";
 import { RegisterUserDto } from "./dtos/user.dto";
 import { User } from "./interfaces/user.interface";
+import { ConfigService } from "@nestjs/config";
+import { jwtConstants } from "src/config";
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,7 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private mailService: MailerService,
+    private configService: ConfigService,
 
     @InjectModel("User") private readonly userModel: Model<UserDocument>
   ) {
@@ -36,6 +39,11 @@ export class AuthService {
   async findOne(email: string): Promise<User> {
     console.log("findOne function");
     const user = await this.userModel.findOne({ email: email });
+    return user;
+  }
+
+  async findById(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
     return user;
   }
 
@@ -57,6 +65,7 @@ export class AuthService {
 
   async registerUser(registerUser: RegisterUserDto): Promise<any> {
     const { email } = registerUser;
+    console.log(this.configService.get("test"));
 
     console.log(registerUser);
     const user = await this.userModel.findOne({ email: email });
@@ -102,11 +111,11 @@ export class AuthService {
     console.log("getToken function");
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        secret: process.env.secret,
+        secret: jwtConstants.accessTokenSecret,
         expiresIn: "10h",
       }),
       this.jwtService.signAsync(payload, {
-        secret: process.env.secretRefreshKey,
+        secret: jwtConstants.secretRefreshKey,
         expiresIn: "24h",
       }),
     ]);
