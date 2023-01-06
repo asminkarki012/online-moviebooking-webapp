@@ -1,5 +1,8 @@
-export class MovieShow{
-  id?:string;
+import { Types } from 'mongoose';
+
+export interface MovieShow{
+
+  id?: Types.ObjectId;
   movieTitle: string;
 
   movieDescription: string;

@@ -22,8 +22,8 @@ export class Booking {
   @Prop({ type: Number })
   totalPrice: number;
 
-  // @Prop({ type: String })
-  // ticketLink: string;
+  @Prop({ type: String })
+  ticketUrl: string;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

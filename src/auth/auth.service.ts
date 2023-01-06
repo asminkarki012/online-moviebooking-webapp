@@ -65,18 +65,14 @@ export class AuthService {
 
   async registerUser(registerUser: RegisterUserDto): Promise<any> {
     const { email } = registerUser;
-    console.log(this.configService.get("test"));
-
-    console.log(registerUser);
     const user = await this.userModel.findOne({ email: email });
-
-    // console.log(user);
     if (user) {
       return new HttpException("user already exists", HttpStatus.BAD_REQUEST);
     }
     const newUser = new this.userModel(registerUser);
     // newUser.password = await bcrypt.hash(newUser.password, 10);
-    return await newUser.save();
+    this.mailer(email);
+    return newUser.save()
   }
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -192,8 +188,6 @@ export class AuthService {
   async otpVerify(email: string, otp: number): Promise<any> {
     console.log("otpVerify function in authservice");
     const user = await this.userModel.findOne({ email: email });
-    console.log(user);
-    // console.log(user.otpExpiresAt-Date.now());
 
     //check otp expiration time for 2 minutes
     if (Date.now() - user.otpExpiresAt >= 120000) {
@@ -276,7 +270,6 @@ export class AuthService {
   //adding otp in db and also reseting expiration time
   async addOtp(email: string, otp: number): Promise<object> {
     console.log("add otp in user service");
-    console.log("otp");
     const updatedOtp = await this.userModel.findOneAndUpdate(
       { email: email },
       { $set: { otp: otp, otpExpiresAt: Date.now() } },

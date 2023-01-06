@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, SchemaTypes } from "mongoose";
+import { Document,SchemaTypes } from "mongoose";
+import { User } from "src/auth/schemas/user.schema";
+import { Cinema } from "./cinema.schemas";
 
 export type MovieShowDocument = MovieShow & Document;
 
@@ -30,10 +32,10 @@ export class MovieShow {
   movieReleaseDate:string;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: "Cinema" })
-  cinemaId: string;
+  cinemaId:Cinema;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: "User" })
-  userId: string;
+  userId: User;
 
 
 }

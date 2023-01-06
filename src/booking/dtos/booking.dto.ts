@@ -5,4 +5,5 @@ export class BookingDto {
   bookingInfo?: Object[];
   totalPrice?: number;
   seatName: string[]; //A1 A2 A3
+
 }

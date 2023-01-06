@@ -10,6 +10,8 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 import { configVar } from "./config";
 import { BookingModule } from './booking/booking.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { MulterModule } from "@nestjs/platform-express";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -24,13 +26,12 @@ import { BookingModule } from './booking/booking.module';
           pass:configVar.GMAIL_PASS
         }
       }
-    }),
+    }),BookingModule,
     MovieShowModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, "..", "client"),
     }),
-    BookingModule,
-  ],
+   CloudinaryModule],
   controllers: [AppController],
   providers: [AppService],
 })

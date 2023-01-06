@@ -1,8 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { BookingDto } from "./dtos/booking.dto";
 import { Booking, BookingDocument } from "./schemas/booking.schemas";
+import { v4 as uuidv4 } from "uuid";
+import { MovieShowService } from "src/movieshow/movieshow.service";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
+import { MailerService } from "@nestjs-modules/mailer";
+import { SendTicketDto } from "./dtos/sendticket.dto";
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const qr = require("qrcode");
@@ -10,16 +15,22 @@ const qr = require("qrcode");
 @Injectable()
 export class BookingService {
   constructor(
-    // @InjectModel("Booking")
-    // private readonly bookingModel: Model<BookingDocument>
+    private mailService: MailerService,
+    @InjectModel("Booking")
+    private readonly bookingModel: Model<BookingDocument>,
+    //to remove circular dependency forwardRef is used in app module BookingModule is imported first and MovieShowModule is imported in bookingmodule
+    @Inject(forwardRef(() => MovieShowService))
+    private movieShowService: MovieShowService,
+    private cloudinary: CloudinaryService
   ) {}
   async generateTicketPdf(populatedData: any) {
     console.log("generateTicketPDF fucntion");
     console.log(populatedData);
 
-    const qrFileName = `qrCodeImage${Math.round(Math.random() * 565)}`;
-    const bookingId = JSON.stringify(populatedData._id);
-    qr.toFile(
+    const qrFileName = `qrCodeImage${uuidv4()}`;
+    const pdfFileName = `${populatedData._id}`;
+    const bookingId = JSON.stringify(populatedData.movieShowId);
+    await qr.toFile(
       `./qrcode/${qrFileName}.png`,
       bookingId,
       function (code: any, error: any) {
@@ -29,13 +40,9 @@ export class BookingService {
 
         // Saving the pdf file in root directory.
         doc.pipe(
-          fs.createWriteStream(
-            `./ticketpdf/ticketfor_${
-              populatedData.movieShowId.movieTitle
-            }_${Math.round((Date.now() / 1000) * 60 * 60 * 60)}.pdf`
-          )
+          fs.createWriteStream(`./ticketpdf/${pdfFileName}.pdf`)
+          // to upload pdf ticket url in database
         );
-
         doc.image("ticketheader.png", {
           fit: [500, 500],
           align: "center",
@@ -72,7 +79,7 @@ export class BookingService {
 
         // for qrcode in ticket
         doc.moveDown();
-        doc.image(`./qrcode/${qrFileName}`, {
+        doc.image(`./qrcode/${qrFileName}.png`, {
           fit: [100, 100],
           align: "left",
           valign: "bottom",
@@ -112,9 +119,59 @@ export class BookingService {
         // doc.fontSize(27).text(``, 100, 100);
 
         doc.end();
+        console.log("writing file completed");
       }
     );
   }
 
+  async uploadTicketPdf(bookingId: string): Promise<object> {
+    console.log("upload pdf");
+    console.log(typeof bookingId);
+    const populatedData = await this.bookingModel
+      .findById(bookingId)
+      .populate(
+        "userId movieShowId cinemaId",
+        "email movieTitle movieShowTime movieShowDate cinemaName cinemaLocation screen"
+      );
 
+    // const {email} = JSON.stringify(populatedData.userId);
+
+    const ticketPdfUrl = await this.cloudinary.uploadPdfTicketInCloudinary(
+      populatedData._id
+    );
+    console.log(ticketPdfUrl);
+    // ticketPdfUrl.then(function(result) { //   return result:
+    // })
+    // const result = await v2.uploader.upload(`./ticketpdf/${pdfFileName}`);
+    await this.bookingModel.findByIdAndUpdate(populatedData._id, {
+      $set: { ticketUrl: ticketPdfUrl },
+    });
+    console.log(populatedData.userId);
+    return await this.movieShowService.sendTicketMail(
+      populatedData.userId,
+      ticketPdfUrl
+    );
+
+    // await this.sendTicketMail(populatedData.userId.email, ticketPdfUrl);
+  }
 }
+
+//    async uploadTicketPdf(pdfFileName:string,bookingId:string,email:string):Promise<void>{
+//     console.log("upload pdf");
+//    const ticketPdfUrl = await this.cloudinary.uploadPdfTicketInCloudinary(pdfFileName);
+//    console.log(ticketPdfUrl);
+//  await  this.movieShowService.updateTicketUrl(ticketPdfUrl,bookingId,email);
+//     // ticketPdfUrl.then(function(result) { //   return result:
+//     // })
+//     // const result = await v2.uploader.upload(`./ticketpdf/${pdfFileName}`);
+//   }
+// }
+
+//  uploadTicketPdf(pdfFileName:string){
+// const ticketPdf = await this.cloudinary.uploadPdf(file);
+// console.log(productPic);
+// const addProfilePicUrl = await this.productModel.findByIdAndUpdate(
+//   { _id: id, $set: { profilepic: productPic.url } },
+//   { new: true }
+// );
+// console.log(typeof(productPic.url));
