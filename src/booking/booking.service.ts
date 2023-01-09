@@ -154,6 +154,11 @@ export class BookingService {
 
     // await this.sendTicketMail(populatedData.userId.email, ticketPdfUrl);
   }
+
+  async findById(id: string): Promise<any> {
+    const booking = await this.bookingModel.findById(id);
+    return booking.totalPrice;
+  }
 }
 
 //    async uploadTicketPdf(pdfFileName:string,bookingId:string,email:string):Promise<void>{
