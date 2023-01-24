@@ -1,30 +1,38 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, SchemaTypes } from "mongoose";
 import { Role } from "src/auth/role.enum";
+import { ForgotPasswordOtp } from "./forgotpasswordotp.schemas";
+import { LoginOtp } from "./loginotp.schemas";
 
 export type UserDocument = User & Document;
 
 @Schema({
- timestamps:true 
+  timestamps: true,
 })
 export class User {
-  @Prop({ type:String,required: true, unique: true })
+  // @Prop({ type: SchemaTypes.ObjectId, ref: "LoginOtp" })
+  // loginOtpId: LoginOtp;
+
+  // @Prop({ type: SchemaTypes.ObjectId, ref: "ForgotPasswordOtp" })
+  // forgotPasswordOtpId: ForgotPasswordOtp;
+
+  @Prop({ type: String, required: true, unique: true })
   email: string;
 
-  @Prop({ type:String,required: true })
+  @Prop({ type: String, required: true })
   password: string;
 
   @Prop({ default: "user" })
   roles: Role[];
 
   //email verification otp
-  @Prop({type:Number})
+  @Prop({ type: Number })
   otp: number;
 
-  @Prop({ type:Number,default: Date.now() })
+  @Prop({ type: Number, default: Date.now() })
   otpExpiresAt: number;
 
-  @Prop({ type:Boolean,default: false }) //when true user can login else cannot login
+  @Prop({ type: Boolean, default: false }) //when true user can login else cannot login
   active: boolean;
 
   //forgotpassword otp
@@ -37,16 +45,14 @@ export class User {
   @Prop()
   forgotPasswordOtpFlag: Boolean;
 
-  @Prop({type:Object})
-  profilepic:Object;
-
+  @Prop({ type: Object })
+  profilePicUrl: Object;
 }
 
 const UserSchema = SchemaFactory.createForClass(User);
 
-
 // UserSchema.virtual("forgotPasswordOtpFlag").get(function (this: UserDocument) {
-  
+
 //   if (Date.now() - this.forgotPasswordOtpExpiresAt >= 60000) {
 //     return (this.forgotPasswordOtpFlag = false);
 //   } else if (

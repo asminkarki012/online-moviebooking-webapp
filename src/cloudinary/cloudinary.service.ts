@@ -9,7 +9,6 @@ export class CloudinaryService {
     console.log("cloudinary service working");
     console.log(`${pdfFileName}.pdf`);
     const result = await v2.uploader.upload(`./ticketpdf/${pdfFileName}.pdf`);
-    console.log(result);
     return result.url;
     // return new Promise((resolve, reject) => {
     //   const upload = v2.uploader.upload()          // toStream(file.buffer).pipe(upload);

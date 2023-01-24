@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 import { MovieShowService } from "src/movieshow/movieshow.service";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { MailerService } from "@nestjs-modules/mailer";
-import { SendTicketDto } from "./dtos/sendticket.dto";
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const qr = require("qrcode");
@@ -41,10 +40,12 @@ export class BookingService {
         // Saving the pdf file in root directory.
         doc.pipe(
           fs.createWriteStream(`./ticketpdf/${pdfFileName}.pdf`)
-          // to upload pdf ticket url in database
         );
+
+
+        doc.moveUp();
         doc.image("ticketheader.png", {
-          fit: [500, 500],
+          fit: [241, 72],
           align: "center",
           valign: "top",
         });
@@ -55,7 +56,7 @@ export class BookingService {
           align: "center",
         });
 
-        doc.moveDown();
+        // doc.moveDown();
         doc.fontSize(18).text(`${populatedData.cinemaId.cinemaName}`, {
           width: 410,
           align: "center",
@@ -134,49 +135,87 @@ export class BookingService {
         "email movieTitle movieShowTime movieShowDate cinemaName cinemaLocation screen"
       );
 
-    // const {email} = JSON.stringify(populatedData.userId);
-
     const ticketPdfUrl = await this.cloudinary.uploadPdfTicketInCloudinary(
       populatedData._id
     );
-    console.log(ticketPdfUrl);
-    // ticketPdfUrl.then(function(result) { //   return result:
-    // })
-    // const result = await v2.uploader.upload(`./ticketpdf/${pdfFileName}`);
+
     await this.bookingModel.findByIdAndUpdate(populatedData._id, {
       $set: { ticketUrl: ticketPdfUrl },
     });
-    console.log(populatedData.userId);
-    return await this.movieShowService.sendTicketMail(
-      populatedData.userId,
-      ticketPdfUrl
-    );
-
-    // await this.sendTicketMail(populatedData.userId.email, ticketPdfUrl);
+    return await this.sendTicketMail(populatedData);
   }
 
-  async findById(id: string): Promise<any> {
-    const booking = await this.bookingModel.findById(id);
-    return booking.totalPrice;
+  async findById(id: string){
+    return await this.bookingModel.findById(id);
+    // return booking;
+  }
+
+  async deleteBookingById(id: string): Promise<object> {
+    const deletedBooking = await this.bookingModel.findByIdAndDelete(id);
+    return {
+      success: true,
+      message: "Booking Deleted Successfully",
+      data: deletedBooking,
+    };
+  }
+
+  async updateBookingById(id: string, bookingDto: BookingDto): Promise<object> {
+    const updatedBooking = await this.bookingModel.findByIdAndUpdate(
+      id,
+      {
+        $set: bookingDto,
+      },
+      { new: true }
+    );
+    return {
+      success: true,
+      message: "Booking Updated Successfully",
+      data: updatedBooking,
+    };
+  }
+
+  async updatePaymentStatus(bookingId: string, payId: string): Promise<void> {
+    await this.bookingModel.findByIdAndUpdate(bookingId, {
+      $set: { paid: true, payId: payId },
+    });
+  }
+
+  //send ticket link in email
+  async sendTicketMail(populatedBookingData: any): Promise<object> {
+    console.log("sendTicketMail function");
+    if (populatedBookingData.paid !== true) {
+      return { success: false, message: "Please Pay First" };
+    }
+    const recepient = populatedBookingData.userId.email;
+
+    await this.mailService.sendMail({
+      to: recepient,
+      from: "noreply@movieticketmail <Photosharing2078@gmail.com>",
+      subject: "Ticket Sales Confirmation",
+      html: `<div>
+      <p>Dear	${recepient},</p>
+      <p>You have successfully purchased your tickets at QFX Cinemas. 
+        The details of your
+    transaction are as follows:</p>
+      <ul style="list-style-type:none;">
+    <li>Theatre:	${populatedBookingData.cinemaId.cinemaName}</li>
+    <li>Auditorium:	${populatedBookingData.cinemaId.screen[0].screenName}</li>
+    <li>Movie Name:	${populatedBookingData.movieShowId.movieTitle}</li>
+    <li>Show Date/Time:	${populatedBookingData.movieShowId.movieShowDate} ${populatedBookingData.movieShowId.movieShowTime}</li>
+    <li>No. of Tickets:	${populatedBookingData.seatName.length}</li>
+    <li>Seat Details:	${populatedBookingData.seatName}</li>
+    <li>Ticket Price:	${populatedBookingData.totalPrice}</li>
+    <li>Best Regards,</li>
+    <li>cineapp</li>
+     </ul>
+    </div>
+      <h4><a href=${populatedBookingData.ticketUrl}>Your Ticket Link Here</a></h4>`,
+    });
+
+    return {
+      success: true,
+      message: "Ticket Send Successfully",
+      data: populatedBookingData,
+    };
   }
 }
-
-//    async uploadTicketPdf(pdfFileName:string,bookingId:string,email:string):Promise<void>{
-//     console.log("upload pdf");
-//    const ticketPdfUrl = await this.cloudinary.uploadPdfTicketInCloudinary(pdfFileName);
-//    console.log(ticketPdfUrl);
-//  await  this.movieShowService.updateTicketUrl(ticketPdfUrl,bookingId,email);
-//     // ticketPdfUrl.then(function(result) { //   return result:
-//     // })
-//     // const result = await v2.uploader.upload(`./ticketpdf/${pdfFileName}`);
-//   }
-// }
-
-//  uploadTicketPdf(pdfFileName:string){
-// const ticketPdf = await this.cloudinary.uploadPdf(file);
-// console.log(productPic);
-// const addProfilePicUrl = await this.productModel.findByIdAndUpdate(
-//   { _id: id, $set: { profilepic: productPic.url } },
-//   { new: true }
-// );
-// console.log(typeof(productPic.url));

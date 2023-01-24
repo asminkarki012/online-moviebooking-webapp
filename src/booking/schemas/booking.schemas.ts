@@ -7,8 +7,9 @@ export type BookingDocument = Booking & Document;
   timestamps: true,
 })
 export class Booking {
+  //to book multiple MovieShow using same userId for future update
   @Prop({ type: SchemaTypes.ObjectId, ref: "MovieShow" })
-  movieShowId: [string];
+  movieShowId: string;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: "User" })
   userId: string;
@@ -16,11 +17,17 @@ export class Booking {
   @Prop({ type: SchemaTypes.ObjectId, ref: "Cinema" })
   cinemaId: string;
 
+  @Prop({type:Boolean,default:false})
+  paid:boolean;
+
+  @Prop({type:String})
+  payId:string;
+
   @Prop({ type: [String] })
   seatName: [string];
 
-  @Prop({ type: Number })
-  totalPrice: number;
+  @Prop({type:Number})
+  totalPrice:number;
 
   @Prop({ type: String })
   ticketUrl: string;

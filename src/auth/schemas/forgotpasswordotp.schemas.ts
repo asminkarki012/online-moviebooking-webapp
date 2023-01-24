@@ -1,69 +1,26 @@
-/*import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
-import { Role } from "src/auth/role.enum";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, SchemaTypes } from "mongoose";
+import { User } from "./user.schema";
 
-// export type UserDocument = User & Document;
+export type ForgotPasswordOtpDocument = ForgotPasswordOtp & Document;
 
 @Schema({
-  toJSON: {
-    virtuals: true,
-  },
+  timestamps: true,
 })
-export class User {
-  @Prop({ required: true, unique: true })
-  email: string;
-
-  @Prop({ required: true })
-  password: string;
-
-  @Prop({ default: "user" })
-  roles: Role[];
-
-  //email verification otp
-  @Prop()
-  otp: Number;
-
-  @Prop({ default: Date.now() })
-  otpExpiresAt: Number;
-
-  @Prop({ default: false }) //when true user can login else cannot login
-  active: Boolean;
+export class ForgotPasswordOtp {
+  @Prop({ type: SchemaTypes.ObjectId, ref: "User" })
+  userId: User;
 
   //forgotpassword otp
-  @Prop()
-  forgotPasswordOtp: Number;
+  @Prop({type:Number})
+  forgotPasswordOtp: number;
 
-  @Prop()
+  @Prop({type:Number})
   forgotPasswordOtpExpiresAt: number;
   // @Prop({default:false})
-  forgotPasswordOtpFlag: Boolean;
+  @Prop({type:Boolean})
+  forgotPasswordOtpFlag: boolean;
 }
-const UserSchema = SchemaFactory.createForClass(User);
 
-UserSchema.virtual("forgotPasswordOtpFlag").get(function (this: UserDocument) {
-  if (Date.now() - this.forgotPasswordOtpExpiresAt >= 60000) {
-    return (this.forgotPasswordOtpFlag = false);
-  } else if (
-    this.forgotPasswordOtp &&
-    Date.now() - this.forgotPasswordOtpExpiresAt <= 60000
-  ) {
-    return (this.forgotPasswordOtpFlag = true);
-  }
-});
-// export const UserSchema = new mongoose.Schema({
-//   email: {
-//     type: String,
-//     unique: true,
-//     require: true,
-//   },
-//   password: {
-//     type: String,
-//     require: true,
-//   },
-//   roles: { type: [String], default: "user" },
-// });
-export { UserSchema };
-
-
-
-*/
+export const ForgotPasswordOtpSchema =
+  SchemaFactory.createForClass(ForgotPasswordOtp);

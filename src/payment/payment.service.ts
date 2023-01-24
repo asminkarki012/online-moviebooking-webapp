@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { Stripe } from "stripe";
 import { configVar } from "src/config";
 import { BookingService } from "src/booking/booking.service";
@@ -6,7 +6,7 @@ import { PaymentDto } from "./dtos/payment.dto";
 
 @Injectable()
 export class PaymentService {
-  private stripe;
+  private stripe: Stripe;
 
   constructor(private bookingService: BookingService) {
     this.stripe = new Stripe(configVar.STRIPE_SECRETKEY, {
@@ -14,19 +14,32 @@ export class PaymentService {
     });
   }
 
-  async createPayment(id: string,paymentDto:PaymentDto): Promise<any> {
+  async createPayment(id: string, paymentDto: PaymentDto): Promise<any> {
     console.log("create Payment service");
-    
-    const totalPrice = await this.bookingService.findById(id);
-    if(totalPrice === paymentDto.paidAmount){
-    return await this.stripe.charges.create({
-      amount: totalPrice,
-      currency:"USD",
-      source:"tok_mastercard",
+    const { paidAmount } = paymentDto;
 
-    });
-  }else{
-    return {message:"Invalid Fund!! Please entered proper Amount"};
-  }
+    const booking = await this.bookingService.findById(id);
+    console.log(booking);
+    if(!booking){
+    return new NotFoundException();
+    }
+
+    const {totalPrice} = booking;
+    if (totalPrice === paidAmount) {
+      const newPayment = await this.stripe.charges.create({
+        amount: totalPrice,
+        currency: "USD",
+        source: "tok_mastercard",
+      });
+
+      this.bookingService.updatePaymentStatus(id,newPayment.id);
+      return {
+        success: true,
+        message: "Payment Done Successfully",
+        data: newPayment,
+      };
+    } else {
+      return { message: "Invalid Fund!! Please enter proper Amount" };
+    }
   }
 }
