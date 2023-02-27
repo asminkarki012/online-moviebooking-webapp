@@ -1,4 +1,4 @@
-export class Cinema {
+export interface Cinema {
   id?: string;
   cinemaName: string;
   cinemaLocation: string;

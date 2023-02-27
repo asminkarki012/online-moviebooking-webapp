@@ -1,15 +1,25 @@
 import { MailerService } from "@nestjs-modules/mailer";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { v2 } from "cloudinary";
+import { Model, Schema, SchemaTypeOptions } from "mongoose";
 import { AuthService } from "src/auth/auth.service";
+import { User } from "src/auth/schemas/user.schema";
 import { BookingService } from "src/booking/booking.service";
 import { BookingDto } from "src/booking/dtos/booking.dto";
 import { Booking, BookingDocument } from "src/booking/schemas/booking.schemas";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
+import { configVar } from "src/config";
 import { CinemaDto } from "./dtos/cinema.dto";
 import { MovieShowDto } from "./dtos/movieshow.dto";
 import { Cinema } from "./interfaces/cinema.interface";
 import { MovieShow } from "./interfaces/movieshow.interface";
+import { UserId } from "./interfaces/populateddata.interface";
 import { CinemaDocument } from "./schemas/cinema.schemas";
 import { MovieShowDocument } from "./schemas/movieshow.schemas";
 
@@ -24,7 +34,8 @@ export class MovieShowService {
     private readonly cinemaModel: Model<CinemaDocument>,
     private authService: AuthService,
     private mailService: MailerService,
-    private bookingService: BookingService
+    private bookingService: BookingService,
+    private cloudinary: CloudinaryService
   ) {}
 
   async addMovieShow(movieShowDto: MovieShowDto): Promise<MovieShow | any> {
@@ -42,13 +53,13 @@ export class MovieShowService {
     return await this.movieShowModel.find();
   }
 
-  async findById(id: string): Promise<MovieShow> {
+  async findById(id: string): Promise<any> {
     console.log("findOne function");
     const movieShow = await this.movieShowModel.findById({ id: id });
     return movieShow;
   }
 
-  async updateMovieShow(id: string, movieShow: MovieShow): Promise<MovieShow> {
+  async updateMovieShow(id: string, movieShow: MovieShow): Promise<any> {
     const updateMovieShow = await this.movieShowModel.findByIdAndUpdate(
       { id: id },
       {
@@ -103,30 +114,35 @@ export class MovieShowService {
     const populatedData = await newBooking
       .save()
       .then((newBooking) =>
-        newBooking.populate(
+        newBooking.populate<{ userid: UserId }>(
           "userId movieShowId cinemaId",
           "email movieTitle movieShowTime movieShowDate cinemaName cinemaLocation screen"
         )
       );
 
-    //settingup mail to send populated and also include a qr code in html when sending mail
-    this.bookingService.generateTicketPdf(populatedData);
+    await this.bookingService.generateTicketPdf(populatedData);
 
     return populatedData;
   }
 
   //send ticket link in email
-  // async sendTicketMail(recepient: string): Promise<any> {
-  //   console.log("authservice mailer function");
-  //   // const hashedOtp
+  async sendTicketMail(
+    userId: string,
+    ticketPdfUrl: Promise<any>
+  ): Promise<object> {
+    
+    console.log("sendTicketMail function");
+    // const hashedOtp
+    const user = await this.authService.findById(userId);
+    const recepient = user.email;
 
-  //   await this.mailService.sendMail({
-  //     to: recepient,
-  //     from: "Testingnoreply@gmail.com",
-  //     subject: "OTP",
-  //     html: `Your OTP code is <b>${otp}</b> \n expires in 2 minutes`,
-  //   });
+    await this.mailService.sendMail({
+      to: recepient,
+      from: "noreplyticketconfirmation",
+      subject: "Ticket Sales Confirmation",
+      html: `<a href=${ticketPdfUrl}>Your Ticket Link Here</a>`,
+    });
 
-  //   return this.addOtp(recepient, otp);
-  // }
+    return { success: true, message: "TicketSend Successfully" };
+  }
 }
