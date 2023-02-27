@@ -17,7 +17,7 @@ export class Cinema {
   ticketRate: number;
 
   @Prop({ type: [Object] })
-  screen: [{ screenName: { type: String }; numOfSeat: { type: Number } }];
+  screen: [{ screenName: { type: String },numOfSeat: { type: Number } }];
 
   //for cinema with multiple screen screen name and seat should be together
   // @Prop({ type: [Object] })
@@ -25,7 +25,7 @@ export class Cinema {
 
   @Prop({ type: [Object] })
   seatInfo: [
-    { seatName: { type: String; unique: true }; sold: { type: Boolean } }
+    { seatName: { type: String; unique: true },sold: { type: Boolean } }
   ];
 }
 

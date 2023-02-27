@@ -14,7 +14,6 @@ import { UserDocument } from "src/auth/schemas/user.schema";
 import { InjectModel } from "@nestjs/mongoose";
 import { RegisterUserDto } from "./dtos/user.dto";
 import { User } from "./interfaces/user.interface";
-import { ConfigService } from "@nestjs/config";
 import { jwtConstants } from "src/config";
 
 @Injectable()
@@ -24,7 +23,6 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private mailService: MailerService,
-    private configService: ConfigService,
 
     @InjectModel("User") private readonly userModel: Model<UserDocument>
   ) {
@@ -64,15 +62,22 @@ export class AuthService {
   }
 
   async registerUser(registerUser: RegisterUserDto): Promise<any> {
-    const { email } = registerUser;
+    const { email, password, confirmPassword } = registerUser;
     const user = await this.userModel.findOne({ email: email });
     if (user) {
-      return new HttpException("user already exists", HttpStatus.BAD_REQUEST);
+      return new HttpException("User already exists", HttpStatus.BAD_REQUEST);
+    }
+    if (password !== confirmPassword) {
+      return new HttpException(
+        "Password Doesnot Match",
+        HttpStatus.BAD_REQUEST
+      );
     }
     const newUser = new this.userModel(registerUser);
-    // newUser.password = await bcrypt.hash(newUser.password, 10);
+    // newUser.password = await bcrypt.hash(newUser.confirmPassword, 10);
     this.mailer(email);
-    return newUser.save()
+    await newUser.save();
+    return { success: true, message: "Register Successfully", data: newUser };
   }
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -90,13 +95,16 @@ export class AuthService {
 
   async login(user: any) {
     //called from login controller
+
     console.log("JWT validation");
     console.log(user);
     console.log(user.email, user._id);
     if (user.active !== true) {
       return "Email not Verified";
     }
-    const payload = { username: user.email, sub: user._id, roles: user.roles };
+
+    //payload for JWT validation
+    const payload = { username: user.email, sub: user._id, roles: user.roles};
     const tokens = await this.getTokens(payload);
     this.tokenList[tokens.refreshToken] = tokens;
     // console.log(this.tokenList);
@@ -176,9 +184,10 @@ export class AuthService {
 
     await this.mailService.sendMail({
       to: recepient,
-      from: "Testingnoreply@gmail.com",
-      subject: "OTP",
-      html: `Your OTP code is <b>${otp}</b> \n expires in 2 minutes`,
+      from: "noreply <noreplymoviebookingmail@gmail.com>",
+      subject: "User Verification",
+      html: `<p>Your OTP code is <b> ${otp} </b> </p>
+       <p> expires in 2 minutes <p>`,
     });
 
     return this.addOtp(recepient, otp);
@@ -291,7 +300,7 @@ export class AuthService {
   }
 
   //adding forgotPasswordotp in db and also reseting its expiration time
-  async forgotPasswordAddOtp(email: string, otp: number) {
+  async forgotPasswordAddOtp(email: string, otp: number):Promise<{success:Boolean,message:string,data:object}>{
     console.log("add forgot password otp in user service");
     const updatedForgotPasswordOtp = await this.userModel.findOneAndUpdate(
       { email: email },
@@ -303,7 +312,7 @@ export class AuthService {
       },
       { new: true }
     );
-    return updatedForgotPasswordOtp;
+    return {success:true,message:"Forgot Password OTP send successfully",data:updatedForgotPasswordOtp};
   }
 
   //after verification of forgotpasswordotp its flag is set to true
@@ -320,7 +329,7 @@ export class AuthService {
       return {
         success: true,
         message: "You can your resetpassword",
-        updateForgotPasswordFlag,
+        data:updateForgotPasswordFlag,
       };
     }
   }
@@ -336,7 +345,8 @@ export class AuthService {
     return updateForgotPasswordFlag;
   }
 
-  async updatePassword(email: string, confirmpassword: string) {
+  async updatePassword(email: string, confirmpassword: string):Promise<object> {
+
     console.log("updatePassword function in users service");
 
     // const newhashedPass = await bcrypt.hash(confirmpassword, 10);
@@ -345,7 +355,7 @@ export class AuthService {
       { $set: { password: confirmpassword } },
       { new: true }
     );
-    return updatedPassword;
+    return {success:true,message:"Password Updated Successfully",data:updatedPassword};
   }
 
   // async uploadProfilePic(email: string, file: object): Promise<Object> {

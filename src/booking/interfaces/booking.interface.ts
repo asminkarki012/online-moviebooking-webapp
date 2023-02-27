@@ -1,4 +1,4 @@
-export class BookingDto {
+export interface IBooking {
   readonly movieShowId: string;
   readonly userId: string;
   readonly cinemaId: string;

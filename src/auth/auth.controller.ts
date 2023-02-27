@@ -8,9 +8,6 @@ import {
   Logger,
   Param,
   Request,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { UseGuards } from "@nestjs/common";
@@ -26,45 +23,39 @@ import { ChangePasswordDto } from "./dtos/changepassword.dto";
 import { Req, UploadedFile, UseInterceptors } from "@nestjs/common/decorators";
 import { OtpDto } from "./dtos/otp.dto";
 import { ForgotPasswordDto } from "./dtos/forgotpassword.dto";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { ProfilePicDto } from "./dtos/profilepic.dto";
 @Controller("/api/auth/users")
 export class AuthController {
   private readonly logger = new Logger();
-  constructor(
-    private authService: AuthService
-  ) {}
+  constructor(private authService: AuthService) {}
 
   @Post("/register")
-  registerUser(@Body() registerUserDto: RegisterUserDto){
-    console.log("register route");
+  registerUser(@Body() registerUserDto: RegisterUserDto) {
     //send otp to user
-
-     this.authService.mailer(registerUserDto.email);
-     return this.authService.registerUser(registerUserDto);
+    this.authService.mailer(registerUserDto.email);
+    return this.authService.registerUser(registerUserDto);
   }
 
   @UseGuards(LocalAuthGuard)
   @Post("/login")
   login(@Request() req): any {
     // information are stored in request
-    console.log("login route");
+
     //return everything except password
     const { password, ...result } = req.user._doc;
 
     return this.authService.login(result);
   }
 
-  @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(Role.Admin)
+  // @UseGuards(AccessTokenGuard, RolesGuard)
+  // @Roles(Role.Admin)
   @Get("/getallusers")
   findAll(): Promise<User[]> {
     console.log("getall users route");
     return this.authService.findAll();
   }
 
-  @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(Role.User)
+  // @UseGuards(AccessTokenGuard, RolesGuard)
+  // @Roles(Role.User)
   @Get(":email")
   findOne(@Param("email") email): Promise<User> {
     console.log("get one user route");
@@ -72,7 +63,7 @@ export class AuthController {
   }
 
   //route to get access token from refresh token
-  @UseGuards(RefreshTokenGuard)
+  // @UseGuards(RefreshTokenGuard)
   @Get("/options/accesstoken")
   refreshTokens(@Request() req): any {
     console.log("in getaccesstoken route");
@@ -82,8 +73,8 @@ export class AuthController {
     return this.authService.refreshTokens(payload, refreshToken);
   }
 
-  @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(Role.User)
+  // @UseGuards(AccessTokenGuard, RolesGuard)
+  // @Roles(Role.User)
   @Put(":email")
   updateUser(
     @Param("email") email,
@@ -92,15 +83,15 @@ export class AuthController {
     return this.authService.updateUser(email, updateUser);
   }
 
-  @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(Role.Admin)
+  // @UseGuards(AccessTokenGuard, RolesGuard)
+  // @Roles(Role.Admin)
   @Delete(":email")
   deleteUser(@Param("email") email): Promise<User> {
     return this.authService.deleteUser(email);
   }
 
-  @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(Role.User)
+  // @UseGuards(AccessTokenGuard, RolesGuard)
+  // @Roles(Role.User)
   @Put("options/changeuserpassword")
   changePassword(
     @Body() changePassword: ChangePasswordDto,
@@ -108,7 +99,6 @@ export class AuthController {
   ): Promise<object> {
     console.log("change password route working");
     console.log(changePassword);
-    console.log(typeof changePassword);
     const { ...payload } = req.user;
     return this.authService.changePassword(payload, changePassword);
   }

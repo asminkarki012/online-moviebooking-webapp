@@ -20,7 +20,7 @@ export class MovieShow {
 
   //here movieimage link is stored
   @Prop({ type: String })
-  movieImage: string;
+  movieImageUrl: string;
 
   @Prop({ type:String})
   movieShowTime: string;

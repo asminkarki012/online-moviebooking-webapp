@@ -1,51 +1,30 @@
-/*import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
-import { UserSchema } from "src/users/schemas/user.schema";
-import { User } from "src/users/schemas/user.schema";
-import * as mongoose from "mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, SchemaTypes } from "mongoose";
+import { Role } from "src/auth/role.enum";
+import { User } from "./user.schema";
+
 export type LoginOtpDocument = LoginOtp & Document;
 
 @Schema({
-  timestamps:true,
-  toJSON: {
-    virtuals: true,
-  },
+ timestamps:true 
 })
 export class LoginOtp {
-  @Prop({ required: true, unique: true,ref:"User"})
-  userId:mongoose.Schema.Types.ObjectId; 
 
+  @Prop({ type: SchemaTypes.ObjectId, ref: "User" })
+  userId:User;
   //email verification otp
-  @Prop()
-  otp: Number;
+  @Prop({type:Number})
+  loginOtp: number;
 
-  @Prop({default:Date.now(),expires:"2m"})
-  createdAt:Date;
+  @Prop({ type:Number,default: Date.now() })
+  loginOtpExpiresAt: number;
+
+  // @Prop({ type:Boolean,default: false }) //when true user can login else cannot login
+  // active: boolean;
 
 }
+
 const LoginOtpSchema = SchemaFactory.createForClass(LoginOtp);
 
-// UserSchema.virtual("forgotPasswordOtpFlag").get(function (this: UserDocument) {
-//   if (Date.now() - this.forgotPasswordOtpExpiresAt >= 60000) {
-//     return (this.forgotPasswordOtpFlag = false);
-//   } else if (
-//     this.forgotPasswordOtp &&
-//     Date.now() - this.forgotPasswordOtpExpiresAt <= 60000
-//   ) {
-//     return (this.forgotPasswordOtpFlag = true);
-//   }
-// });
-// export const UserSchema = new mongoose.Schema({
-//   email: {
-//     type: String,
-//     unique: true,
-//     require: true,
-//   },
-//   password: {
-//     type: String,
-//     require: true,
-//   },
-//   roles: { type: [String], default: "user" },
-// });
+
 export { LoginOtpSchema };
-*/

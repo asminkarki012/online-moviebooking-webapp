@@ -1,3 +1,3 @@
 export class SendTicketDto{
-    bookingId:string;
+  readonly  bookingId:string;
 }
