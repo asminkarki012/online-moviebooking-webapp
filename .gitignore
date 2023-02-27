@@ -4,6 +4,11 @@
 
 #ignore all keys
 /config/*
+config.ts
+
+#ignore pdffile and qrcode
+/ticketpdf
+/qrcode
 
 # keys
 /src/config/*

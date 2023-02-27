@@ -13,7 +13,6 @@ import {
   FileTypeValidator,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { UsersService } from "src/users/users.service";
 import { UseGuards } from "@nestjs/common";
 import { LocalAuthGuard } from "./local-auth.guard";
 import { RegisterUserDto } from "src/auth/dtos/user.dto";
@@ -33,16 +32,16 @@ import { ProfilePicDto } from "./dtos/profilepic.dto";
 export class AuthController {
   private readonly logger = new Logger();
   constructor(
-    private usersService: UsersService,
     private authService: AuthService
   ) {}
 
   @Post("/register")
-  registerUser(@Body() registerUserDto: RegisterUserDto): Promise<User> {
+  registerUser(@Body() registerUserDto: RegisterUserDto){
     console.log("register route");
     //send otp to user
 
-    return this.authService.mailer(registerUserDto.email);
+     this.authService.mailer(registerUserDto.email);
+     return this.authService.registerUser(registerUserDto);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -61,7 +60,7 @@ export class AuthController {
   @Get("/getallusers")
   findAll(): Promise<User[]> {
     console.log("getall users route");
-    return this.usersService.findAll();
+    return this.authService.findAll();
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)
@@ -69,7 +68,7 @@ export class AuthController {
   @Get(":email")
   findOne(@Param("email") email): Promise<User> {
     console.log("get one user route");
-    return this.usersService.findOne(email);
+    return this.authService.findOne(email);
   }
 
   //route to get access token from refresh token
@@ -90,14 +89,14 @@ export class AuthController {
     @Param("email") email,
     @Body() updateUser: RegisterUserDto
   ): Promise<User> {
-    return this.usersService.updateUser(email, updateUser);
+    return this.authService.updateUser(email, updateUser);
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(Role.Admin)
   @Delete(":email")
   deleteUser(@Param("email") email): Promise<User> {
-    return this.usersService.deleteUser(email);
+    return this.authService.deleteUser(email);
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)
