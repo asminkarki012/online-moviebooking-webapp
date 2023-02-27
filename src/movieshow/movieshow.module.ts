@@ -8,6 +8,7 @@ import { AuthModule } from "src/auth/auth.module";
 import { BookingSchema } from "src/booking/schemas/booking.schemas";
 import { BookingService } from "src/booking/booking.service";
 import { CloudinaryModule } from "src/cloudinary/cloudinary.module";
+import { PaymentModule } from "src/payment/payment.module";
 
 @Module({
   imports: [

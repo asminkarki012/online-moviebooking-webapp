@@ -28,6 +28,7 @@
     "@nestjs/passport": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/serve-static": "^3.0.0",
+    "@types/stripe": "^8.0.417",
     "bcrypt": "^5.1.0",
     "buffer-to-stream": "^1.0.0",
     "cloudinary": "^1.33.0",
@@ -43,6 +44,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
+    "stripe": "^11.6.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

@@ -130,7 +130,6 @@ export class MovieShowService {
     userId: string,
     ticketPdfUrl: Promise<any>
   ): Promise<object> {
-    
     console.log("sendTicketMail function");
     // const hashedOtp
     const user = await this.authService.findById(userId);
@@ -138,7 +137,7 @@ export class MovieShowService {
 
     await this.mailService.sendMail({
       to: recepient,
-      from: "noreplyticketconfirmation",
+      from: "noreplymail <Photosharing2078@gmail.com>",
       subject: "Ticket Sales Confirmation",
       html: `<a href=${ticketPdfUrl}>Your Ticket Link Here</a>`,
     });
@@ -146,3 +145,16 @@ export class MovieShowService {
     return { success: true, message: "TicketSend Successfully" };
   }
 }
+
+//ticket template
+// Dear	Asmin Karki,
+// You have successfully purchased your tickets at QFX Cinemas. The details of your
+// transaction are as follows:
+// Theatre:	QFX Civil Mall
+// Auditorium:	CC Audi 1
+// Movie Name:	3D Thor: Love and Thunder
+// Show Date/Time:	7/8/2022 02:45 PM, Friday
+// No. of Tickets:	2
+// Seat Details:	O4,O3
+// Best Regards,
+// QFX Cinemas
