@@ -24,7 +24,31 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Online Moviebooking Webapp
+
+#### Created REST API for online moviebooking system 
+
+
+#### Overall System Design
+![overallsystemdesigndiagram](https://user-images.githubusercontent.com/37731845/225084981-a03402ec-e44b-49d4-98eb-04c34fbc9e7d.jpg)
+
+
+#### DFD of the System
+![DFD_online_moviebooking_webapp](https://user-images.githubusercontent.com/37731845/225084933-f95c1cfd-69ba-425c-9b3d-baa3d3ef1103.jpg)
+
+
+#### ERD with Attributes of the System
+![erd-boxdiagram](https://user-images.githubusercontent.com/37731845/225086345-a019b8ec-6e34-4a9f-8ca1-a859b208b23c.jpg)
+
+
+#### Sample Ticket Format Send to User 
+![sampleticketwithproperborder](https://user-images.githubusercontent.com/37731845/225088802-9d922c51-e1a7-44fd-a78c-1e98a6cfc844.png)
+
+### Features
+- Authentication and Authorization using JWT and RoleGuard
+- Generate pdf with qr code 
+- Stripe payment portal is integrated
+- Can Send Ticket via Email
 
 ## Installation
 
