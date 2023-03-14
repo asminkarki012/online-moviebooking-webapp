@@ -14,12 +14,12 @@ export class PaymentService {
     });
   }
 
-  async createPayment(id: string, paymentDto: PaymentDto): Promise<any> {
+// generate ticket after payment
+  async createPayment(bookingId: string, paymentDto: PaymentDto): Promise<any> {
     console.log("create Payment service");
     const { paidAmount } = paymentDto;
 
-    const booking = await this.bookingService.findById(id);
-    console.log(booking);
+   const booking = await this.bookingService.findById(bookingId);
     if(!booking){
     return new NotFoundException();
     }
@@ -31,15 +31,19 @@ export class PaymentService {
         currency: "USD",
         source: "tok_mastercard",
       });
+      
+      this.bookingService.updatePaymentStatus(bookingId,newPayment.id);
 
-      this.bookingService.updatePaymentStatus(id,newPayment.id);
+      this.bookingService.generateTicketPdf(bookingId);
+
       return {
         success: true,
         message: "Payment Done Successfully",
         data: newPayment,
       };
+
     } else {
-      return { message: "Invalid Fund!! Please enter proper Amount" };
+      return {success:false, message: "Invalid Fund!! Please enter proper Amount" };
     }
   }
 }

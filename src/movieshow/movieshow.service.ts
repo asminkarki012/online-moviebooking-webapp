@@ -114,8 +114,35 @@ export class MovieShowService {
     };
   }
 
-  async deleteMovieShow(id: string): Promise<MovieShow | object> {
-    return await this.movieShowModel.findByIdAndDelete(id);
+  async deleteMovieShowById(id: string): Promise<MovieShow | object> {
+    const deletedMovieShow = await this.movieShowModel.findByIdAndDelete(id);
+    return {
+      success: true,
+      message: "Movie Show Successfully Deleted",
+    };
+  }
+
+  async deleteCinemaById(id: string): Promise<MovieShow | object> {
+    const deletedCinema = await this.movieShowModel.findByIdAndDelete(id);
+    return {
+      success: true,
+      message: "Cinema Successfully Deleted",
+    };
+  }
+
+  async updateCinemaById(id: string, cinemaDto: CinemaDto): Promise<object> {
+    const updatedCinema = await this.movieShowModel.findByIdAndUpdate(
+      id,
+      {
+        $set: cinemaDto,
+      },
+      { new: true }
+    );
+    return {
+      success: true,
+      message: "Cinema Successfully Deleted",
+      data: updatedCinema,
+    };
   }
 
   async addCinema(cinemaDto: CinemaDto): Promise<Cinema | HttpException> {
@@ -165,7 +192,6 @@ export class MovieShowService {
     // const newhashedPass = await bcrypt.hash(confirmpassword, 10);
     let allSeats = [];
     allSeats = populatedMovieShowData.cinemaId.seatInfo;
-
     //filtering only for seat which are not sold ie sold===false
     const allSeatsArray = [];
     let indexOfSeat = [];
@@ -195,15 +221,13 @@ export class MovieShowService {
     bookingDto.totalPrice =
       populatedMovieShowData.cinemaId.ticketRate * bookingDto.seatName.length;
 
-      console.log(typeof bookingDto.totalPrice)
+    // updating seat status after it is booked
+    const updateSeatStatus = await this.cinemaModel.findByIdAndUpdate(
+      populatedMovieShowData.cinemaId,
+      { $set: { seatInfo: allSeats } },
+      { new: true }
+    );
 
-
-    // const updateSeatStatus = await this.cinemaModel.findByIdAndUpdate(
-    //   populatedMovieShowData.cinemaId,
-    //   { $set: { seatInfo: allSeats } },
-    //   { new: true }
-    // );
-    console.log(bookingDto);
     const newBooking = new this.bookingModel(bookingDto);
     const bookingPopulatedData = await newBooking.save();
     // .then((newBooking) =>
