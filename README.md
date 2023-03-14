@@ -46,6 +46,7 @@
 
 ### Features
 - Authentication and Authorization using JWT and RoleGuard
+- OTP verification 
 - Generate pdf with qr code 
 - Stripe payment portal is integrated
 - Can Send Ticket via Email
