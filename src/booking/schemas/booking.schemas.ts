@@ -1,5 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, SchemaTypeOptions, SchemaTypes } from "mongoose";
+import { User } from "src/auth/schemas/user.schema";
+import { Cinema } from "src/movieshow/schemas/cinema.schemas";
+import { MovieShow } from "src/movieshow/schemas/movieshow.schemas";
 
 export type BookingDocument = Booking & Document;
 
@@ -9,13 +12,13 @@ export type BookingDocument = Booking & Document;
 export class Booking {
   //to book multiple MovieShow using same userId for future update
   @Prop({ type: SchemaTypes.ObjectId, ref: "MovieShow" })
-  movieShowId: string;
+  movieShowId: MovieShow;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: "User" })
-  userId: string;
+  userId: User;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: "Cinema" })
-  cinemaId: string;
+  cinemaId: Cinema;
 
   @Prop({type:Boolean,default:false})
   paid:boolean;

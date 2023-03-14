@@ -22,16 +22,22 @@ export class BookingService {
     private movieShowService: MovieShowService,
     private cloudinary: CloudinaryService
   ) {}
-  async generateTicketPdf(populatedData: any) {
+  async generateTicketPdf(bookingId:string) {
     console.log("generateTicketPDF fucntion");
-    console.log(populatedData);
+
+    const populatedData = await this.bookingModel
+      .findById(bookingId)
+      .populate(
+        "userId movieShowId cinemaId",
+        "movieTitle movieShowTime movieShowDate cinemaName cinemaLocation screen"
+      );
 
     const qrFileName = `qrCodeImage${uuidv4()}`;
     const pdfFileName = `${populatedData._id}`;
-    const bookingId = JSON.stringify(populatedData.movieShowId);
+    const qrData = JSON.stringify(populatedData.movieShowId);
     await qr.toFile(
       `./qrcode/${qrFileName}.png`,
-      bookingId,
+      qrData,
       function (code: any, error: any) {
         if (error) return console.log(error);
 
@@ -148,6 +154,12 @@ export class BookingService {
   async findById(id: string){
     return await this.bookingModel.findById(id);
     // return booking;
+  }
+
+
+  async findAll():Promise<object>{
+   const getAllbooking=await this.bookingModel.find();
+    return {success:true,message:"All Booking Data Fetched",data:getAllbooking};
   }
 
   async deleteBookingById(id: string): Promise<object> {

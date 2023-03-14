@@ -15,8 +15,6 @@ import { RolesGuard } from "src/auth/roles.guard";
 import { MovieShowService } from "src/movieshow/movieshow.service";
 import { BookingService } from "./booking.service";
 import { BookingDto } from "./dtos/booking.dto";
-import { SendTicketDto } from "./dtos/sendticket.dto";
-import { Booking } from "./schemas/booking.schemas";
 
 @Controller("/api/booking")
 export class BookingController {
@@ -25,32 +23,44 @@ export class BookingController {
     private bookingService: BookingService
   ) {}
 
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin,Role.User)
   @Post("/add")
   bookingSeat(@Body() bookingDto: BookingDto) {
     return this.movieShowService.bookingSeat(bookingDto);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.Admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Post("/sendticket/:id")
-  sendTicketLink(@Param("bookindId") bookingId) {
+  sendTicketLink(@Param("id") bookingId) {
     return this.bookingService.uploadTicketPdf(bookingId);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.Admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin,Role.User)
   @Delete("/delete/:id")
   deleteBookingById(@Param("id") bookingId) {
     return this.bookingService.deleteBookingById(bookingId);
   }
 
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin,Role.User)
   @Get("/find/:id")
   findById(@Param("id") bookingId) {
     return this.bookingService.findById(bookingId);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.Admin)
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Get("/findall")
+  findAll() {
+    return this.bookingService.findAll();
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Post("/sendticket/:id")
   updateBookingById(
     @Param("bookingId") bookingId,

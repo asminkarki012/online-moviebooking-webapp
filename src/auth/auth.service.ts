@@ -30,12 +30,10 @@ export class AuthService {
   }
 
   async findAll(): Promise<User[]> {
-    console.log("findAll function");
     return await this.userModel.find();
   }
 
   async findOne(email: string): Promise<User> {
-    console.log("findOne function");
     const user = await this.userModel.findOne({ email: email });
     return user;
   }
@@ -45,20 +43,37 @@ export class AuthService {
     return user;
   }
 
-  async deleteUser(email: string): Promise<User> {
-    return await this.userModel.findOneAndDelete({ email: email });
+  async deleteUser(email: string): Promise<Object | NotFoundException> {
+    const deletedUser = await this.userModel.findOneAndDelete({ email: email });
+    if (!deletedUser) {
+      return new NotFoundException();
+    }
+
+    return {
+      success: true,
+      message: "User Deleted Successfully",
+      data: deletedUser,
+    };
+
+    // return {success:true,message:"User Deleted Successfully",data:deletedUser};
   }
 
-  async updateUser(email: string, user: User): Promise<User> {
-    const updateUser = await this.userModel.findOneAndUpdate(
+  async updateUser(
+    email: string,
+    user: User
+  ): Promise<Object | NotFoundException> {
+    const updatedUser = await this.userModel.findOneAndUpdate(
       { email: email },
       {
         $set: user,
       },
       { new: true }
     );
-    const { password, ...result } = updateUser;
-    return result;
+    if (!updatedUser) {
+      return new NotFoundException();
+    }
+    const { password, ...result } = updatedUser;
+    return { sucess: true, message: "User Updated Successfully", data: result };
   }
 
   async registerUser(registerUser: RegisterUserDto): Promise<any> {
@@ -75,8 +90,10 @@ export class AuthService {
     }
     const newUser = new this.userModel(registerUser);
     // newUser.password = await bcrypt.hash(newUser.confirmPassword, 10);
-    this.mailer(email);
     await newUser.save();
+    //send otp to user email
+    this.mailer(email);
+
     return { success: true, message: "Register Successfully", data: newUser };
   }
 
@@ -84,7 +101,6 @@ export class AuthService {
     console.log("Auth service validate User");
     const user = await this.userModel.findOne({ email: email });
     // const isPasswordMatch = await bcrypt.compare(password, user.password);
-    // console.log(user);
     if (user && password === user.password) {
       console.log(user);
       const { password, ...result } = user;
@@ -95,16 +111,13 @@ export class AuthService {
 
   async login(user: any) {
     //called from login controller
-
     console.log("JWT validation");
-    console.log(user);
-    console.log(user.email, user._id);
     if (user.active !== true) {
       return "Email not Verified";
     }
 
     //payload for JWT validation
-    const payload = { username: user.email, sub: user._id, roles: user.roles};
+    const payload = { username: user.email, sub: user._id, roles: user.roles };
     const tokens = await this.getTokens(payload);
     this.tokenList[tokens.refreshToken] = tokens;
     // console.log(this.tokenList);
@@ -132,7 +145,6 @@ export class AuthService {
 
   async refreshTokens(payload: any, refreshToken: string): Promise<object> {
     console.log("Running refreshtokens function");
-    console.log(refreshToken);
     const { iat, exp, ...data } = payload;
     if (refreshToken in this.tokenList) {
       const tokens = await this.getTokens(data);
@@ -144,12 +156,10 @@ export class AuthService {
 
   async changePassword(payload: any, changePassword: any): Promise<Object> {
     console.log("changePassword function working");
-    console.log(payload);
     //for future update use access token payload to get email done
     // payload.username contains email
     const user = await this.userModel.findOne({ email: payload.username });
 
-    console.log(user);
     if (!user) {
       return new NotFoundException();
     }
@@ -171,7 +181,6 @@ export class AuthService {
       confirmpassword
     );
 
-    console.log(updatedPasswordUser);
     return updatedPasswordUser;
   }
 
@@ -179,9 +188,8 @@ export class AuthService {
   async mailer(recepient: string): Promise<any> {
     console.log("authservice mailer function");
     const otp = Math.floor(1000 + Math.random() * 9000);
-    // const hashedOtp
-    console.log(otp);
 
+    // const hashedOtp
     await this.mailService.sendMail({
       to: recepient,
       from: "noreply <noreplymoviebookingmail@gmail.com>",
@@ -215,13 +223,12 @@ export class AuthService {
     console.log("authservice mailer function");
     const otp = Math.floor(1000 + Math.random() * 9000);
     // const hashedOtp
-    console.log(otp);
 
     await this.mailService.sendMail({
       to: recepient,
-      from: "Testingnoreply@gmail.com",
+      from: "noreply <noreplymoviebookingmail@gmail.com>",
       subject: "Reset Your Password",
-      html: `Your OTP code is <b>${otp}</b> to reset password \n expires in 1 minute`,
+      html: `<p>Your OTP code is <b>${otp}</b> to reset password </p> expires in 1 minute`,
     });
     await this.initialForgotPasswordFlag(recepient);
     return this.forgotPasswordAddOtp(recepient, otp);
@@ -290,7 +297,6 @@ export class AuthService {
   //when user is verified its active status is set to true
   async updateActive(email: string): Promise<String> {
     console.log("users service updateactive function");
-    console.log(email);
     await this.userModel.findOneAndUpdate(
       { email: email },
       { $set: { active: true, otpExpiresAt: Date.now() } },
@@ -300,7 +306,10 @@ export class AuthService {
   }
 
   //adding forgotPasswordotp in db and also reseting its expiration time
-  async forgotPasswordAddOtp(email: string, otp: number):Promise<{success:Boolean,message:string,data:object}>{
+  async forgotPasswordAddOtp(
+    email: string,
+    otp: number
+  ): Promise<{ success: Boolean; message: string; data: object }> {
     console.log("add forgot password otp in user service");
     const updatedForgotPasswordOtp = await this.userModel.findOneAndUpdate(
       { email: email },
@@ -312,13 +321,16 @@ export class AuthService {
       },
       { new: true }
     );
-    return {success:true,message:"Forgot Password OTP send successfully",data:updatedForgotPasswordOtp};
+    return {
+      success: true,
+      message: "Forgot Password OTP send successfully",
+      data: updatedForgotPasswordOtp,
+    };
   }
 
   //after verification of forgotpasswordotp its flag is set to true
   async updateForgotPasswordFlag(email: string): Promise<object> {
     console.log("users service updateforgotpasswordflag function");
-    console.log(email);
     const user = await this.userModel.findOne({ email: email });
     // user.forgotPasswordOtpFlag = true;
     if (user.forgotPasswordOtpFlag === false) {
@@ -329,7 +341,7 @@ export class AuthService {
       return {
         success: true,
         message: "You can your resetpassword",
-        data:updateForgotPasswordFlag,
+        data: updateForgotPasswordFlag,
       };
     }
   }
@@ -345,8 +357,10 @@ export class AuthService {
     return updateForgotPasswordFlag;
   }
 
-  async updatePassword(email: string, confirmpassword: string):Promise<object> {
-
+  async updatePassword(
+    email: string,
+    confirmpassword: string
+  ): Promise<object> {
     console.log("updatePassword function in users service");
 
     // const newhashedPass = await bcrypt.hash(confirmpassword, 10);
@@ -355,7 +369,11 @@ export class AuthService {
       { $set: { password: confirmpassword } },
       { new: true }
     );
-    return {success:true,message:"Password Updated Successfully",data:updatedPassword};
+    return {
+      success: true,
+      message: "Password Updated Successfully",
+      data: updatedPassword,
+    };
   }
 
   // async uploadProfilePic(email: string, file: object): Promise<Object> {

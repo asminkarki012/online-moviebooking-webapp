@@ -8,6 +8,7 @@ import {
   Logger,
   Param,
   Request,
+  NotFoundException,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { UseGuards } from "@nestjs/common";
@@ -30,8 +31,6 @@ export class AuthController {
 
   @Post("/register")
   registerUser(@Body() registerUserDto: RegisterUserDto) {
-    //send otp to user
-    this.authService.mailer(registerUserDto.email);
     return this.authService.registerUser(registerUserDto);
   }
 
@@ -46,16 +45,16 @@ export class AuthController {
     return this.authService.login(result);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.Admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Get("/getallusers")
   findAll(): Promise<User[]> {
     console.log("getall users route");
     return this.authService.findAll();
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.User)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.User)
   @Get(":email")
   findOne(@Param("email") email): Promise<User> {
     console.log("get one user route");
@@ -63,7 +62,7 @@ export class AuthController {
   }
 
   //route to get access token from refresh token
-  // @UseGuards(RefreshTokenGuard)
+  @UseGuards(RefreshTokenGuard)
   @Get("/options/accesstoken")
   refreshTokens(@Request() req): any {
     console.log("in getaccesstoken route");
@@ -73,25 +72,25 @@ export class AuthController {
     return this.authService.refreshTokens(payload, refreshToken);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.User)
-  @Put(":email")
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.User,Role.Admin)
+  @Put("/update/:email")
   updateUser(
     @Param("email") email,
     @Body() updateUser: RegisterUserDto
-  ): Promise<User> {
+  ): Promise<Object> {
     return this.authService.updateUser(email, updateUser);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.Admin)
-  @Delete(":email")
-  deleteUser(@Param("email") email): Promise<User> {
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Delete("/delete/:email")
+  deleteUser(@Param("email") email): Promise<Object | NotFoundException> {
     return this.authService.deleteUser(email);
   }
 
-  // @UseGuards(AccessTokenGuard, RolesGuard)
-  // @Roles(Role.User)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.User,Role.Admin)
   @Put("options/changeuserpassword")
   changePassword(
     @Body() changePassword: ChangePasswordDto,
@@ -103,7 +102,7 @@ export class AuthController {
     return this.authService.changePassword(payload, changePassword);
   }
 
-  @Post("/options/verifyotp")
+  @Post("/options/loginverifyotp")
   otpVerify(@Body() verifyOtp: OtpDto): Promise<string> {
     console.log("verify otp route");
     console.log(verifyOtp.email);
@@ -117,10 +116,10 @@ export class AuthController {
     return this.authService.mailer(Otp.email);
   }
 
-  @Post("/options/sendforgotpasswordotp")
-  sendForgotPasswordOtp(@Body() Otp: OtpDto): Promise<string> {
+  @Post("/options/sendforgotpasswordotp/:email")
+  sendForgotPasswordOtp(@Param("email") email): Promise<string> {
     console.log("sendforgotpasswordotp route");
-    return this.authService.forgotPasswordMailer(Otp.email);
+    return this.authService.forgotPasswordMailer(email);
   }
 
   @Post("/options/forgotpasswordotpverify")

@@ -12,7 +12,7 @@ import { AuthModule } from "src/auth/auth.module";
   imports: [
     MovieShowModule,
     CloudinaryModule,
-    MongooseModule.forFeature([{ name: "Booking", schema: BookingSchema }]),
+    MongooseModule.forFeature([{ name: "Booking", schema: BookingSchema }]),AuthModule
   ],
   providers: [BookingService],
   controllers: [BookingController],
